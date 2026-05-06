@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-05-06
+
+### Fixed
+- Add `eval_type_backport>=0.2` as a conditional dependency for
+  Python 3.9 (`python_version < '3.10'`). Pydantic v2 evaluates
+  type annotations at model-class-creation time even when
+  `from __future__ import annotations` is in effect — and PEP 604
+  `X | None` syntax is a runtime operator only on Python 3.10+. On
+  3.9, pydantic needs the backport package to evaluate the strings.
+  Without it, importing `opensalestax` on 3.9 raises a TypeError.
+  v0.1.1 didn't catch this because it was only verified on the
+  3.12 dev venv.
+
 ## [0.1.1] - 2026-05-06
 
 ### Changed
