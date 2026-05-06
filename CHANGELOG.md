@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-06
+
+### Changed
+- **Lower Python floor from 3.10 to 3.9.** All source files already use
+  `from __future__ import annotations`, so PEP 604 union syntax and
+  PEP 585 generic syntax (used throughout) are deferred to strings at
+  parse time and never evaluated at runtime. The runtime requirements
+  (httpx + pydantic v2) both support Python 3.9. This unblocks
+  installing on the official `odoo:16` Docker image (Debian 11, Python
+  3.9.2) — needed for the `opensalestax-odoo` connector's 16.0 branch.
+- CI matrix now includes Python 3.9 alongside 3.10/3.11/3.12/3.13.
+
 ## [0.1.0] - 2026-05-06
 
 ### Added

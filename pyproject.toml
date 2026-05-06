@@ -9,7 +9,7 @@ description = "Python SDK for OpenSalesTax — calculate US sales tax via the v1
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 authors = [{ name = "Eric Osterberg", email = "ejosterberg@gmail.com" }]
 keywords = ["opensalestax", "sales-tax", "tax-calculation", "sdk", "httpx", "pydantic"]
 classifiers = [
@@ -17,6 +17,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -68,7 +69,7 @@ include = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py39"
 
 [tool.ruff.lint]
 select = [
@@ -81,7 +82,7 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.9"
 strict = true
 warn_unreachable = true
 warn_redundant_casts = true
