@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-05-18
+
+Minor bump: adopts the engine's new `GET /v1/capabilities` endpoint
+shipped in engine v0.59.0. Connectors that depend on this SDK can now
+query engine capabilities at setup time + gate feature-flagged code
+paths on a single fetch. Backward compatible — existing
+`health()` / `states()` / `rates()` / `calculate()` APIs unchanged.
+
+### Added
+
+- **`OpenSalesTaxClient.capabilities()`** — fresh `GET /v1/capabilities`;
+  returns a typed `CapabilitiesResponse`.
+- **`OpenSalesTaxClient.capabilities_cached()`** — same as above but
+  memoized per-Client-instance.
+- **`CapabilitiesResponse` / `CapabilityEndpoint` / `CapabilityFeatures`**
+  pydantic models exported from the package root.
+- **`CapabilityFeatures.extras`** — preserves any future engine feature
+  flags the SDK doesn't yet have typed slots for. Forward-compatible
+  by design. Same shape as the PHP + JS SDKs.
+- **`MIN_ENGINE_VERSION`** constant (`"0.59.0"`) — exposed for connector
+  setup-time engine-version checks.
+- New test module `tests/test_capabilities.py` + new fixture
+  `tests/fixtures/capabilities.json` (captured from live engine VM 906
+  on 2026-05-18). 7 new tests.
+
 ## [0.1.2] - 2026-05-06
 
 ### Fixed
