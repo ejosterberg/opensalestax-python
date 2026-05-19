@@ -99,9 +99,7 @@ class TestCalculatedShippingResponseModel:
 
 
 class TestCalculationResultShippingField:
-    def test_parses_full_engine_snapshot(
-        self, calculate_shipping_payload: dict[str, Any]
-    ) -> None:
+    def test_parses_full_engine_snapshot(self, calculate_shipping_payload: dict[str, Any]) -> None:
         result = CalculationResult.model_validate(calculate_shipping_payload)
         assert result.subtotal == Decimal("100.00")
         assert result.tax_total == Decimal("10.1531")
@@ -113,9 +111,7 @@ class TestCalculationResultShippingField:
         assert result.shipping.taxable_reason is not None
         assert "MN" in result.shipping.taxable_reason
 
-    def test_shipping_none_when_engine_omits_field(
-        self, calculate_payload: dict[str, Any]
-    ) -> None:
+    def test_shipping_none_when_engine_omits_field(self, calculate_payload: dict[str, Any]) -> None:
         # The pre-v0.59.0 fixture omits the `shipping` and
         # `coverage_warning` keys entirely. Parse should succeed and
         # both fields should be None.

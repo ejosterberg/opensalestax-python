@@ -59,9 +59,7 @@ class Shipping(BaseModel):
 
     amount: Decimal = Field(ge=Decimal("0"), description="Pre-tax shipping amount.")
     method: str | None = Field(default=None, description="Optional carrier/method label.")
-    separately_stated: bool = Field(
-        default=True, description="Defaults True; relevant for MO/VA."
-    )
+    separately_stated: bool = Field(default=True, description="Defaults True; relevant for MO/VA.")
     is_handling_charge: bool = Field(
         default=False, description="MD distinguishes shipping vs handling."
     )

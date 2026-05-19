@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-05-19
+
+### Fixed
+
+- **`ruff format --check` CI red on v0.3.0.** v0.3.0 added the new
+  `Shipping` and `CalculatedShipping` pydantic models but the
+  formatter had drift in `src/opensalestax/models.py` and
+  `tests/test_shipping.py`. `ruff format` auto-fix applied. No
+  behavior change; 68 tests still pass.
+
 ## [0.3.0] — 2026-05-19
 
 Minor bump: shipping support mirroring `opensalestax-js` and
