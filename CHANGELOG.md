@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-05-19
+
+Minor bump: shipping support mirroring `opensalestax-js` and
+`ejosterberg/opensalestax` v0.3.0. Engine v0.59.0+ accepts a
+top-level `shipping` field on `POST /v1/calculate` and applies
+per-state taxability rules. Backward compatible.
+
+### Added
+
+- `Shipping` pydantic model (request-side).
+- `CalculatedShipping` pydantic model (response-side).
+- Optional `shipping` kwarg on `OpenSalesTaxClient.calculate()`.
+- `CalculationResult.shipping` (`CalculatedShipping | None`).
+- `CalculationResult.coverage_warning` (`str | None`).
+- `Shipping` and `CalculatedShipping` exported from package root.
+
 ## [0.2.0] — 2026-05-18
 
 Minor bump: adopts the engine's new `GET /v1/capabilities` endpoint

@@ -26,6 +26,7 @@ from .models import (
     HealthResponse,
     LineItem,
     RateStack,
+    Shipping,
     StateCoverage,
     StatesResponse,
 )
@@ -166,12 +167,28 @@ class OpenSalesTaxClient:
         self,
         address: Address,
         line_items: list[LineItem],
+        shipping: Shipping | None = None,
     ) -> CalculationResult:
-        """``POST /v1/calculate`` — full per-line, per-jurisdiction calculation."""
+        """``POST /v1/calculate`` — full per-line, per-jurisdiction calculation.
+
+        Pass an optional :class:`Shipping` to enable engine v0.59.0+'s
+        first-class shipping handling (per-state shipping-taxability
+        rules applied engine-side). Older engines silently ignore the
+        field and respond with ``shipping=None``.
+        """
         body: dict[str, Any] = {
             "address": address.model_dump(mode="json", exclude_none=True),
             "line_items": [li.model_dump(mode="json") for li in line_items],
         }
+        if shipping is not None:
+            # exclude_defaults=False so separately_stated=True and
+            # is_handling_charge=False are explicit on the wire (matches
+            # JS/PHP behavior). by_alias=False because Shipping has no
+            # request-side aliases; the engine's request schema is
+            # already snake_case (matching the pydantic field names).
+            body["shipping"] = shipping.model_dump(
+                mode="json", exclude_defaults=False, by_alias=False
+            )
         data = self._post("/v1/calculate", json=body)
         return self._parse(CalculationResult, data)
 

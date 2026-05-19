@@ -40,6 +40,33 @@ class LineItem(BaseModel):
     category: str = Field(default="general", description="Tax category (general, clothing, ...).")
 
 
+class Shipping(BaseModel):
+    """Top-level shipping segment on ``POST /v1/calculate`` (engine v0.59.0+).
+
+    Sent under the ``shipping`` key (NOT as a line item with
+    ``category: "shipping"`` — that's the legacy shim that pre-dates the
+    engine's first-class shipping support). Older engines silently
+    ignore the field; the response's ``shipping`` will be ``None``.
+
+    The engine applies per-state shipping-taxability rules internally
+    (MN's "tax-if-items-taxable" rule, MO/VA's "separately-stated"
+    rule, MD's shipping-vs-handling distinction, etc.). Connectors
+    just pass the amount and optional flags; the engine decides
+    whether to tax it and at what rate.
+    """
+
+    model_config = _FROZEN
+
+    amount: Decimal = Field(ge=Decimal("0"), description="Pre-tax shipping amount.")
+    method: str | None = Field(default=None, description="Optional carrier/method label.")
+    separately_stated: bool = Field(
+        default=True, description="Defaults True; relevant for MO/VA."
+    )
+    is_handling_charge: bool = Field(
+        default=False, description="MD distinguishes shipping vs handling."
+    )
+
+
 class JurisdictionBreakdown(BaseModel):
     """One taxing authority contributing to a rate stack or calculated line.
 
@@ -205,6 +232,34 @@ class CalculatedLine(BaseModel):
     note: str | None = None
 
 
+class CalculatedShipping(BaseModel):
+    """Calculated shipping segment in a ``POST /v1/calculate`` response.
+
+    Present when the request included a top-level ``shipping`` field
+    AND the engine supports first-class shipping (v0.59.0+).
+
+    The engine returns this even when shipping ended up non-taxable —
+    ``tax`` is ``Decimal("0.00")`` and ``taxable_reason`` explains why
+    (e.g., "TX does not tax shipping when separately stated").
+    """
+
+    model_config = _FROZEN
+
+    amount: Decimal
+    tax: Decimal = Field(
+        alias="tax_amount",
+        validation_alias="tax_amount",
+        description="Tax due on shipping; Decimal('0.00') when exempt.",
+    )
+    rate_pct: Decimal = Field(
+        description="Effective shipping tax rate (combined across jurisdictions)."
+    )
+    taxable_reason: str | None = Field(
+        default=None,
+        description="Engine's explanation of why shipping was / wasn't taxed.",
+    )
+
+
 class CalculationResult(BaseModel):
     """``POST /v1/calculate`` response body."""
 
@@ -214,3 +269,19 @@ class CalculationResult(BaseModel):
     tax_total: Decimal
     lines: list[CalculatedLine]
     disclaimer: str
+    shipping: CalculatedShipping | None = Field(
+        default=None,
+        description=(
+            "Calculated shipping. None when the request omitted the top-level "
+            "shipping field OR when the engine is older than v0.59.0 and "
+            "ignored it."
+        ),
+    )
+    coverage_warning: str | None = Field(
+        default=None,
+        description=(
+            "Coverage warning text emitted by engine v0.59.0+ when a calc "
+            "request hits a jurisdiction with incomplete rate data. None "
+            "when no warning was emitted."
+        ),
+    )

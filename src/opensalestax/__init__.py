@@ -13,6 +13,7 @@ from .errors import (
 from .models import (
     Address,
     CalculatedLine,
+    CalculatedShipping,
     CalculationResult,
     CapabilitiesResponse,
     CapabilityEndpoint,
@@ -22,6 +23,7 @@ from .models import (
     JurisdictionType,
     LineItem,
     RateStack,
+    Shipping,
     StateCoverage,
     StatesResponse,
 )
@@ -30,6 +32,7 @@ __all__ = [
     "MIN_ENGINE_VERSION",
     "Address",
     "CalculatedLine",
+    "CalculatedShipping",
     "CalculationResult",
     "CapabilitiesResponse",
     "CapabilityEndpoint",
@@ -45,6 +48,7 @@ __all__ = [
     "OpenSalesTaxNetworkError",
     "OpenSalesTaxValidationError",
     "RateStack",
+    "Shipping",
     "StateCoverage",
     "StatesResponse",
     "__version__",
