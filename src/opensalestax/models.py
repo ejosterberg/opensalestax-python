@@ -65,6 +65,90 @@ class HealthResponse(BaseModel):
     database_connected: bool
 
 
+class CapabilityEndpoint(BaseModel):
+    """One entry in the ``endpoints`` map of :class:`CapabilitiesResponse`."""
+
+    model_config = _FROZEN
+
+    path: str
+    version: int = 1
+
+
+class CapabilityFeatures(BaseModel):
+    """Feature flags returned by the engine on ``GET /v1/capabilities``.
+
+    Known flags as of engine v0.59.0:
+
+    * ``coverage_warning`` — engine emits a coverage-warning when a calc
+      request hits a jurisdiction with incomplete rate data.
+    * ``shipping_first_class`` — engine accepts the top-level ``shipping``
+      field on ``POST /v1/calculate`` (vs. the legacy ``category:
+      "shipping"`` line-item shim).
+    * ``vendor_allocation`` — engine accepts per-line ``vendor_id`` and
+      returns per-vendor allocation. v0.59.0 ships ``False`` (engine
+      team direction: permanently deferred).
+    * ``transaction_record_back`` — engine exposes ``POST /v1/transactions``
+      for committed-sale record-back. v0.59.0 ships ``False`` (engine
+      positioned as calculation-only).
+
+    Additional flags emitted by future engine versions land in ``extras``
+    (preserved verbatim) so connectors can flag-gate new functionality
+    without an SDK bump.
+    """
+
+    model_config = ConfigDict(frozen=True, str_strip_whitespace=True, extra="allow")
+
+    coverage_warning: bool = False
+    shipping_first_class: bool = False
+    vendor_allocation: bool = False
+    transaction_record_back: bool = False
+    extras: dict[str, bool] = Field(default_factory=dict)
+
+    @classmethod
+    def from_engine(cls, raw: dict[str, Any]) -> CapabilityFeatures:
+        """Build from the engine's snake_case wire dict, partitioning unknown
+        flags into ``extras`` so the typed surface remains stable across
+        engine versions."""
+        known = {
+            "coverage_warning",
+            "shipping_first_class",
+            "vendor_allocation",
+            "transaction_record_back",
+        }
+        known_vals: dict[str, bool] = {}
+        extras: dict[str, bool] = {}
+        for k, v in raw.items():
+            if not isinstance(v, bool):
+                # Tolerate engine drift: silently coerce non-bool to False.
+                v = False
+            if k in known:
+                known_vals[k] = v
+            else:
+                extras[k] = v
+        return cls(extras=extras, **known_vals)
+
+
+class CapabilitiesResponse(BaseModel):
+    """Response from ``GET /v1/capabilities`` (engine v0.59.0+).
+
+    Exposes the engine's version, endpoint manifest, and feature flags
+    so SDK consumers can flag-gate code paths (first-class shipping,
+    future record-back, etc.) and surface a clear "engine too old"
+    error at setup time when the engine reports a version below
+    :data:`MIN_ENGINE_VERSION`.
+
+    Use :meth:`OpenSalesTaxClient.capabilities_cached` for setup-time
+    checks; it memoizes per-Client-instance to avoid the per-request
+    round-trip cost.
+    """
+
+    model_config = _FROZEN
+
+    version: str
+    endpoints: dict[str, CapabilityEndpoint] = Field(default_factory=dict)
+    features: CapabilityFeatures = Field(default_factory=CapabilityFeatures)
+
+
 class StateCoverage(BaseModel):
     """One entry in the ``GET /v1/states`` coverage list."""
 

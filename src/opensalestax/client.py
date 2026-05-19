@@ -20,6 +20,9 @@ from .errors import (
 from .models import (
     Address,
     CalculationResult,
+    CapabilitiesResponse,
+    CapabilityEndpoint,
+    CapabilityFeatures,
     HealthResponse,
     LineItem,
     RateStack,
@@ -76,6 +79,9 @@ class OpenSalesTaxClient:
             timeout=timeout,
             verify=verify,
         )
+        # Per-instance memoization for capabilities_cached(). Reset by
+        # creating a new Client.
+        self._cached_capabilities: CapabilitiesResponse | None = None
 
     def __enter__(self) -> OpenSalesTaxClient:
         return self
@@ -96,6 +102,47 @@ class OpenSalesTaxClient:
         """``GET /v1/health`` — liveness and DB-connection check."""
         data = self._get("/v1/health")
         return self._parse(HealthResponse, data)
+
+    def capabilities(self) -> CapabilitiesResponse:
+        """``GET /v1/capabilities`` — engine version, endpoint manifest, feature flags.
+
+        Always fetches fresh. For setup-time checks that shouldn't pay
+        the per-request round-trip cost, use :meth:`capabilities_cached`.
+
+        Requires engine ``MIN_ENGINE_VERSION`` (``0.59.0``) or newer;
+        older engines respond with 404.
+        """
+        data = self._get("/v1/capabilities")
+        raw_features = data.get("features", {})
+        features = (
+            CapabilityFeatures.from_engine(raw_features)
+            if isinstance(raw_features, dict)
+            else CapabilityFeatures()
+        )
+        # Hand-construct the response so we can route unknown feature
+        # flags into `extras` (pydantic alone can't do the partitioning
+        # cleanly).
+        return CapabilitiesResponse.model_construct(
+            version=str(data.get("version", "")),
+            endpoints={
+                name: CapabilityEndpoint.model_validate(meta)
+                for name, meta in (data.get("endpoints") or {}).items()
+                if isinstance(meta, dict)
+            },
+            features=features,
+        )
+
+    def capabilities_cached(self) -> CapabilitiesResponse:
+        """Memoized :meth:`capabilities`. Per-Client-instance cache.
+
+        Returns the same response object for every call after the first
+        on the same Client. Suitable for setup-time feature-flag checks
+        where the capability snapshot will not change within the
+        process lifetime. Invalidate by creating a new Client.
+        """
+        if self._cached_capabilities is None:
+            self._cached_capabilities = self.capabilities()
+        return self._cached_capabilities
 
     def states(self) -> list[StateCoverage]:
         """``GET /v1/states`` — list of every state's coverage tier.
